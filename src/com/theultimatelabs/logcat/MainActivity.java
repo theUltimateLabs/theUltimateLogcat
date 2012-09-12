@@ -1,19 +1,30 @@
 package com.theultimatelabs.logcat;
 
-import android.app.*;
-import android.content.*;
-import android.os.*;
-import android.util.*;
-import android.widget.*;
-import java.io.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
 
-import java.lang.Process;
+import android.app.Activity;
+import android.app.Notification;
+import android.app.Notification.Builder;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
+import android.content.res.Resources;
+import android.graphics.BitmapFactory;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.util.Log;
+import android.widget.RemoteViews;
+import android.widget.RemoteViews.RemoteView;
 
 
 public class MainActivity extends Activity
 {
-
+	public final String TAG = "LogcatActivity";
+	
 	private Notification mNotification2,mNotification;
 
 	private Notification.Builder mBuilder;
@@ -23,8 +34,10 @@ public class MainActivity extends Activity
 	{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
-		String ns = Context.NOTIFICATION_SERVICE;
-		NotificationManager notificationManager = (NotificationManager) getSystemService(ns);
+        
+        Log.v(TAG,"onCreate");
+//		String ns = Context.NOTIFICATION_SERVICE;
+//		NotificationManager notificationManager = (NotificationManager) getSystemService(ns);
 //		NotificationManager notificationManager = getNotificationManager();
 //		Notification.Builder notiBuilder = new Notification.Builder(this);
 //		notiBuilder.setContentInfo("TITLE");
@@ -42,43 +55,49 @@ public class MainActivity extends Activity
 //			.setSummaryText("+3 more")
 //			.build();
 
-		Notification.Builder build = new Notification.Builder(this)
-            .setContentTitle("New mail from me")
-            .setContentText("subject")
-            .setTicker("New email with photo")
-            .addAction(
-			android.R.drawable.ic_btn_speak_now,
-			"Speak!",
-			PendingIntent.getActivity(getApplicationContext(), 0,
-									  getIntent(), 0, null))
-            .addAction(
-			android.R.drawable.ic_dialog_map,
-			"Maps",
-			PendingIntent.getActivity(getApplicationContext(), 0,
-									  getIntent(), 0, null))
-            .addAction(
-			android.R.drawable.ic_dialog_info,
-			"Info",
-			PendingIntent.getActivity(getApplicationContext(), 0,
-									  getIntent(), 0, null));
+		
 
-		mNotification = new Notification.InboxStyle(build).build();
+		//sendInboxStyleNotification();
 
-		Intent notificationIntent = new Intent(this, MainActivity.class);
+		
+		
+		//new NotificationUpdater().execute();
+		Log.v(TAG,"build");
+		Builder builder = new Notification.Builder(this);
+		builder.setContentInfo("info");
+		builder.setContentText("text");
+		builder.setContentTitle("title");
+		Log.v(TAG,"notify");
+		getNotificationManager().notify(0, builder.build());
+		
+		Context ctx = this;
+		Intent notificationIntent = new Intent(ctx, MainActivity.class);
+		PendingIntent contentIntent = PendingIntent.getActivity(ctx,
+		        0, notificationIntent,
+		        PendingIntent.FLAG_CANCEL_CURRENT);
 
-		notificationManager.notify(1, mNotification);
-
-		sendInboxStyleNotification();
-
-		mNotification2 = new Notification();
+		NotificationManager nm = (NotificationManager) ctx
+		        .getSystemService(Context.NOTIFICATION_SERVICE);
+		
 		RemoteViews contentView = new RemoteViews(getPackageName(), R.layout.notification);
-		//contentView.setImageViewResource(R.id.image, R.drawable.notification_image);
-		contentView.setTextViewText(R.id.title, "Custom notification");
-		contentView.setTextViewText(R.id.text, "This is a custom layout");
-		mNotification2.contentView = contentView;
-
-		getNotificationManager().notify(3, mNotification2);
-
+		
+		
+		builder = new Notification.Builder(ctx);
+		Log.v(TAG,"build");
+		builder.setContentIntent(contentIntent)
+					.setSmallIcon(R.drawable.ic_launcher)
+		            .setTicker("ticker")
+		            .setWhen(System.currentTimeMillis())
+		            .setAutoCancel(true)
+		            .setContentTitle("title")
+		            .setContentText("text")
+					.setContent(contentView);
+		Notification n = builder.build();
+		n.bigContentView = new RemoteViews(getPackageName(), R.layout.notification);
+		Log.v(TAG,n.toString());
+		Log.v(TAG,"notify");
+		nm.notify(5, n);
+		
     }
 
 	public void sendInboxStyleNotification()
@@ -124,7 +143,8 @@ public class MainActivity extends Activity
 				try
 				{
 					
-					Notification.InboxStyle notificationBuilder2 = new Notification.InboxStyle();
+					Notification.InboxStyle notificationBuilder2 = new Notification.InboxStyle(mBuilder);
+					
 					Notification.Builder notificationBuilder1 = new Notification.Builder(getApplicationContext());
 					RemoteViews contentView = new RemoteViews(getPackageName(), R.layout.notification);
 					//notificationBuilder.setContent(contentView);
@@ -157,8 +177,6 @@ public class MainActivity extends Activity
 				catch (IOException e)
 				{
 				}
-
-
 
 			}
 
